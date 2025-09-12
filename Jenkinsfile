@@ -2,36 +2,59 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')   // from Jenkins credentials
-        SSH_KEY = credentials('ec2-ssh-key')                          // for EC2
+        DOCKERHUB_REPO = "yash335/devops-task"
+        EC2_HOST = "ubuntu@18.136.229.137"
+        APP_DIR = "/home/ubuntu/app"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
-                    credentialsId: 'github_credentials',   // use PAT or SSH key stored in Jenkins
+                    credentialsId: 'github_credentials',
                     url: 'https://github.com/Yash335/DevOps_task.git'
             }
         }
 
-        stage('Build Docker Image on EC2 & Push to Docker Hub') {
+        stage('Copy Code to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
+                sshagent(['ssh_key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@18.136.229.137 '
-                            cd /home/ubuntu/app &&
-                            git pull origin main &&
-                            echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin &&
-                            docker build -t yash335/devops-task:latest . &&
-                            docker push yash335/devops-task:latest &&
-                            docker stop devops-task || true &&
-                            docker rm devops-task || true &&
-                            docker run -d --name devops-task -p 3000:3000 yash335/devops-task:latest
-                        '
+                        ssh -o StrictHostKeyChecking=no $EC2_HOST "mkdir -p $APP_DIR"
+                        scp -o StrictHostKeyChecking=no -r * $EC2_HOST:$APP_DIR/
                     """
                 }
             }
+        }
+
+        stage('Build, Push & Deploy on EC2') {
+            steps {
+                sshagent(['ssh_key']) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials',
+                                                      usernameVariable: 'DOCKER_USER',
+                                                      passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no $EC2_HOST '
+                                cd $APP_DIR &&
+                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin &&
+                                docker build -t $DOCKER_USER/devops-task:latest . &&
+                                docker push $DOCKER_USER/devops-task:latest &&
+                                docker rm -f devops-task || true &&
+                                docker run -d --name devops-task -p 3000:3000 $DOCKER_USER/devops-task:latest
+                            '
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment successful!'
+        }
+        failure {
+            echo '❌ Deployment failed. Check logs!'
         }
     }
 }
