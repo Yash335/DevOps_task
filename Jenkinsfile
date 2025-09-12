@@ -2,13 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "yash335/devops-task"
+        DOCKER_IMAGE = "yash335/devops-task"           // Docker Hub repo
         DOCKER_TAG = "${env.BUILD_NUMBER}"
-        DOCKER_CREDENTIALS_ID = "dockerhub-credentials"  // Add in Jenkins Credentials
-    }
-
-    triggers {
-        githubPush()   // Webhook trigger from GitHub
+        DOCKER_CREDENTIALS_ID = "dockerhub-credentials"  // Jenkins Docker Hub credentials
+        EC2_CREDENTIALS_ID = "ec2-ssh"                    // Jenkins EC2 SSH credentials
+        EC2_HOST = "18.136.229.137"                       // Your Ubuntu EC2 public IP
     }
 
     stages {
@@ -21,7 +19,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm install'
-                sh 'npm test || echo "No tests found"'  // run tests if available
+                sh 'npm test || echo "No tests found"'
             }
         }
 
@@ -42,10 +40,17 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to EC2') {
             steps {
-                script {
-                    
+                sshagent([env.EC2_CREDENTIALS_ID]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
+                          docker pull $DOCKER_IMAGE:$DOCKER_TAG &&
+                          docker stop devops-task || true &&
+                          docker rm devops-task || true &&
+                          docker run -d --name devops-task -p 4010:4010 $DOCKER_IMAGE:$DOCKER_TAG
+                        '
+                    """
                 }
             }
         }
