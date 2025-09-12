@@ -53,10 +53,10 @@ pipeline {
             echo "Pipeline finished. Build #${env.BUILD_NUMBER}"
         }
         failure {
-            echo "Pipeline failed!"
+            echo "Pipeline failed"
         }
         success {
-            echo "Pipeline succeeded!"
+            echo "Pipeline succeeded"
         }
     }
 }
