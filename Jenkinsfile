@@ -1,12 +1,9 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18-bullseye'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
+        DOCKER_HOST = "tcp://docker:2375"
+        DOCKER_TLS_VERIFY = "0"
         DOCKER_IMAGE = "yash335/devops-task"
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_CREDENTIALS_ID = "dockerhub-credentials"
@@ -57,6 +54,4 @@ pipeline {
         }
     }
 }
-
-
 
