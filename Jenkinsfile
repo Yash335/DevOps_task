@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "your-dockerhub-username/devops-task"
+        DOCKER_IMAGE = "yash335/devops-task"
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_CREDENTIALS_ID = "dockerhub-credentials"  // Add in Jenkins Credentials
     }
