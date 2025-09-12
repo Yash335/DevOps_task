@@ -19,7 +19,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm install'
-                sh 'npm test || echo "No tests found"'
+                sh 'npm test || echo "Noo tests found"'
             }
         }
 
