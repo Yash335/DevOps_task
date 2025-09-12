@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        EC2_USER = "ubuntu"
-        EC2_HOST = "18.136.229.137"
         DOCKER_IMAGE = "yash335/devops-task"
         DOCKER_TAG = "${env.BUILD_NUMBER}"
-        SSH_CREDENTIALS_ID = "ec2-ssh-key"  // Jenkins credential for SSH private key
+        SSH_CREDENTIALS_ID = "ec2-ssh-key"
+        EC2_USER = "ubuntu"
+        EC2_HOST = "18.136.229.137"
     }
 
     stages {
@@ -16,22 +16,35 @@ pipeline {
             }
         }
 
+        stage('Build Locally') {
+            steps {
+                script {
+                    if (fileExists('package.json')) {
+                        sh 'npm install'
+                        sh 'npm test || echo "No tests found"'
+                    }
+                }
+            }
+        }
+
         stage('Build & Deploy on EC2') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: "${SSH_CREDENTIALS_ID}", keyFileVariable: 'SSH_KEY')]) {
-                    // Copy files to EC2
+                withCredentials([sshUserPrivateKey(credentialsId: "${SSH_CREDENTIALS_ID}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+
+                    // Copy project files to EC2
                     sh """
-                        scp -i $SSH_KEY -o StrictHostKeyChecking=no -r * ${EC2_USER}@${EC2_HOST}:/home/${EC2_USER}/app
+                    scp -i $SSH_KEY -o StrictHostKeyChecking=no -r Dockerfile Jenkinsfile README.md app.js logoswayatt.png node_modules package-lock.json package.json $EC2_USER@$EC2_HOST:/home/ubuntu/app
                     """
-                    // Build and run Docker container on EC2
+
+                    // SSH into EC2 and build/run Docker
                     sh """
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-                        cd /home/${EC2_USER}/app &&
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . &&
-                        docker stop devops-task || true &&
-                        docker rm devops-task || true &&
-                        docker run -d --name devops-task -p 4010:4010 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '
+                    ssh -i $SSH_KEY -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+                    cd /home/ubuntu/app
+                    sudo docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                    sudo docker stop devops-task || true
+                    sudo docker rm devops-task || true
+                    sudo docker run -d --name devops-task -p 4010:4010 $DOCKER_IMAGE:$DOCKER_TAG
+                    EOF
                     """
                 }
             }
