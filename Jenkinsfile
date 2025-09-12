@@ -1,12 +1,15 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18-bullseye'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
-        DOCKER_IMAGE = "yash335/devops-task"           // Docker Hub repo
+        DOCKER_IMAGE = "yash335/devops-task"
         DOCKER_TAG = "${env.BUILD_NUMBER}"
-        DOCKER_CREDENTIALS_ID = "dockerhub-credentials"  // Jenkins Docker Hub credentials
-        EC2_CREDENTIALS_ID = "ec2-ssh"                    // Jenkins EC2 SSH credentials
-        EC2_HOST = "18.136.229.137"                       // Your Ubuntu EC2 public IP
+        DOCKER_CREDENTIALS_ID = "dockerhub-credentials"
     }
 
     stages {
@@ -19,13 +22,13 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm install'
-                sh 'npm test || echo "Noo tests found"'
+                sh 'npm test || echo "No tests found"'
             }
         }
 
         stage('Dockerize') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
+                sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
             }
         }
 
@@ -42,16 +45,14 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent([env.EC2_CREDENTIALS_ID]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
-                          docker pull $DOCKER_IMAGE:$DOCKER_TAG &&
-                          docker stop devops-task || true &&
-                          docker rm devops-task || true &&
-                          docker run -d --name devops-task -p 4010:4010 $DOCKER_IMAGE:$DOCKER_TAG
-                        '
-                    """
-                }
+                sh """
+                    ssh -o StrictHostKeyChecking=no ubuntu@18.136.229.137 '
+                    docker pull $DOCKER_IMAGE:$DOCKER_TAG &&
+                    docker stop devops-task || true &&
+                    docker rm devops-task || true &&
+                    docker run -d --name devops-task -p 4010:4010 $DOCKER_IMAGE:$DOCKER_TAG
+                    '
+                """
             }
         }
     }
