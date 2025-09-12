@@ -40,7 +40,7 @@ pipeline {
                         sudo docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
                         sudo docker stop devops-task || true
                         sudo docker rm devops-task || true
-                        sudo docker run -d --name devops-task -p 4010:4010 $DOCKER_IMAGE:$DOCKER_TAG
+                        sudo docker run -d --name devops-task -p 4010:3000 $DOCKER_IMAGE:$DOCKER_TAG
                     '
                     """
                 }
