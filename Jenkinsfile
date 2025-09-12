@@ -2,47 +2,34 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // DockerHub username + password/PAT
-        DOCKER_HUB_REPO = "yash335/devops-task"
-        APP_NAME = "devops-task"
-        EC2_HOST = "ubuntu@18.136.229.137" // update with your EC2 user@IP
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')   // from Jenkins credentials
+        SSH_KEY = credentials('ec2-ssh-key')                          // for EC2
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Yashwant335/devops-task.git'
+                git branch: 'main',
+                    credentialsId: 'github_credentials',   // use PAT or SSH key stored in Jenkins
+                    url: 'https://github.com/Yash335/DevOps_task.git'
             }
         }
 
-        stage('Build & Deploy on EC2') {
+        stage('Build Docker Image on EC2 & Push to Docker Hub') {
             steps {
-                sshagent(['ec2-ssh-key']) { // Jenkins SSH key credential
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no $EC2_HOST << 'EOF'
-                        cd /home/ubuntu/app || mkdir -p /home/ubuntu/app && cd /home/ubuntu/app
-                        # Pull latest code from Jenkins workspace
-                        rm -rf *
-                        exit
-                    EOF
-
-                    # Copy source code to EC2
-                    scp -o StrictHostKeyChecking=no -r * $EC2_HOST:/home/ubuntu/app
-
-                    # Build, push, and run container on EC2
-                    ssh -o StrictHostKeyChecking=no $EC2_HOST << EOF
-                        cd /home/ubuntu/app
-                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                        docker build -t $DOCKER_HUB_REPO:$BUILD_NUMBER .
-                        docker push $DOCKER_HUB_REPO:$BUILD_NUMBER
-                        docker tag $DOCKER_HUB_REPO:$BUILD_NUMBER $DOCKER_HUB_REPO:latest
-                        docker push $DOCKER_HUB_REPO:latest
-
-                        docker stop $APP_NAME || true
-                        docker rm $APP_NAME || true
-                        docker run -d -p 80:3000 --name $APP_NAME $DOCKER_HUB_REPO:$BUILD_NUMBER
-                    EOF
-                    '''
+                sshagent(['ec2-ssh-key']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@18.136.229.137 '
+                            cd /home/ubuntu/app &&
+                            git pull origin main &&
+                            echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin &&
+                            docker build -t yash335/devops-task:latest . &&
+                            docker push yash335/devops-task:latest &&
+                            docker stop devops-task || true &&
+                            docker rm devops-task || true &&
+                            docker run -d --name devops-task -p 3000:3000 yash335/devops-task:latest
+                        '
+                    """
                 }
             }
         }
