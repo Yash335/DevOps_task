@@ -16,24 +16,13 @@ pipeline {
             }
         }
 
-        stage('Build Locally') {
-            steps {
-                script {
-                    if (fileExists('package.json')) {
-                        sh 'npm install'
-                        sh 'npm test || echo "No tests found"'
-                    }
-                }
-            }
-        }
-
         stage('Build & Deploy on EC2') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "${SSH_CREDENTIALS_ID}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
 
                     // Copy project files to EC2
                     sh """
-                    scp -i $SSH_KEY -o StrictHostKeyChecking=no -r Dockerfile Jenkinsfile README.md app.js logoswayatt.png node_modules package-lock.json package.json $EC2_USER@$EC2_HOST:/home/ubuntu/app
+                    scp -i $SSH_KEY -o StrictHostKeyChecking=no -r Dockerfile Jenkinsfile README.md app.js logoswayatt.png package-lock.json package.json $EC2_USER@$EC2_HOST:/home/ubuntu/app
                     """
 
                     // SSH into EC2 and build/run Docker
