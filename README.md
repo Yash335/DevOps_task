@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logo Server
 
 A simple Express.js web server that serves the Swayatt logo image.
@@ -59,3 +60,6 @@ You will see the Swayatt logo displayed in your browser.
 - **Port**: 3000
 - **Endpoint**: GET `/` - serves the logo image
 - **File served**: `logoswayatt.png`
+=======
+# DevOps_task
+>>>>>>> 1fb9604dd51e26d14202f9e9191751e005d8e6e6
