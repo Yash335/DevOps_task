@@ -45,17 +45,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Option 1: Deploy to AWS ECS
-                    // sh 'aws ecs update-service --cluster myCluster --service myService --force-new-deployment'
-
-                    // Option 2: Deploy to Kubernetes (EKS/GKE)
-                    sh """
-                    kubectl set image deployment/devops-task-deployment devops-task-container=$DOCKER_IMAGE:$DOCKER_TAG --record
-                    kubectl rollout status deployment/devops-task-deployment
-                    """
-
-                    // Option 3: Deploy to GCP Cloud Run
-                    // sh 'gcloud run deploy devops-task --image $DOCKER_IMAGE:$DOCKER_TAG --region us-central1 --platform managed'
+                    
                 }
             }
         }
