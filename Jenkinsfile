@@ -2,61 +2,49 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "yash335/devops-task"
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
-        SSH_CREDENTIALS_ID = "ec2-ssh-key"        // Add your Jenkins SSH credential ID
-        EC2_USER = "ubuntu"
-        EC2_HOST = "18.136.229.137"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // DockerHub username + password/PAT
+        DOCKER_HUB_REPO = "yash335/devops-task"
+        APP_NAME = "devops-task"
+        EC2_HOST = "ubuntu@18.136.229.137" // update with your EC2 user@IP
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Yash335/DevOps_task.git'
-            }
-        }
-
-        stage('Build Locally') {
-            steps {
-                // Optional: if you want to build npm locally before sending to EC2
-                sh 'npm install || echo "npm install skipped"'
-                sh 'npm test || echo "No tests found"'
+                git branch: 'main', url: 'https://github.com/Yashwant335/devops-task.git'
             }
         }
 
         stage('Build & Deploy on EC2') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: "${SSH_CREDENTIALS_ID}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                sshagent(['ec2-ssh-key']) { // Jenkins SSH key credential
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no $EC2_HOST << 'EOF'
+                        cd /home/ubuntu/app || mkdir -p /home/ubuntu/app && cd /home/ubuntu/app
+                        # Pull latest code from Jenkins workspace
+                        rm -rf *
+                        exit
+                    EOF
 
-                    // Copy project files to EC2
-                    sh """
-                    scp -i $SSH_KEY -o StrictHostKeyChecking=no -r Dockerfile Jenkinsfile README.md app.js logoswayatt.png package-lock.json package.json $EC2_USER@$EC2_HOST:/home/ubuntu/app
-                    """
+                    # Copy source code to EC2
+                    scp -o StrictHostKeyChecking=no -r * $EC2_HOST:/home/ubuntu/app
 
-                    // SSH into EC2 and build/run Docker
-                    sh """
-                    ssh -i $SSH_KEY -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST '
+                    # Build, push, and run container on EC2
+                    ssh -o StrictHostKeyChecking=no $EC2_HOST << EOF
                         cd /home/ubuntu/app
-                        sudo docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-                        sudo docker stop devops-task || true
-                        sudo docker rm devops-task || true
-                        sudo docker run -d --name devops-task -p 4010:3000 $DOCKER_IMAGE:$DOCKER_TAG
-                    '
-                    """
+                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                        docker build -t $DOCKER_HUB_REPO:$BUILD_NUMBER .
+                        docker push $DOCKER_HUB_REPO:$BUILD_NUMBER
+                        docker tag $DOCKER_HUB_REPO:$BUILD_NUMBER $DOCKER_HUB_REPO:latest
+                        docker push $DOCKER_HUB_REPO:latest
+
+                        docker stop $APP_NAME || true
+                        docker rm $APP_NAME || true
+                        docker run -d -p 80:3000 --name $APP_NAME $DOCKER_HUB_REPO:$BUILD_NUMBER
+                    EOF
+                    '''
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            echo "Pipeline finished. Build #${env.BUILD_NUMBER}"
-        }
-        failure {
-            echo "Pipeline failed"
-        }
-        success {
-            echo "Pipeline succeeded"
         }
     }
 }
