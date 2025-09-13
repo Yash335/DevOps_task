@@ -41,4 +41,28 @@ This guide explains how code changes in a GitHub repository are automatically de
   1. Checks out the latest code from GitHub using the configured credentials.
   2. Establishes SSH connection to the EC2 instance using the configured SSH key.
   3. Build, Push & Deploy Docker Image on EC2
-  4. Application can be accessed on hhtps://<EC2-IP>:3000
+  4. Application can be accessed on htps://<EC2_PUBLIC_IP>:3000
+
+
+## ✅ Verification
+
+- Run `docker ps` on EC2 → Check if container `devops-task` is running.
+- Run `docker logs devops-task` → Verify app logs.
+- Open the app in a browser at `http://<EC2_PUBLIC_IP>:3000`.
+
+---
+
+## 🔧 Troubleshooting
+
+- **Port not accessible?**  
+  Check EC2 security group → Ensure inbound rule allows port 3000.
+
+- **Docker push denied?**  
+  Verify DockerHub credentials in Jenkins.
+
+- **Container not starting?**  
+  Run `docker logs devops-task` to debug issues.
+
+- **Webhook not triggering Jenkins?**  
+  Ensure the Cloudflare Tunnel URL is reachable and correctly configured in GitHub webhook.
+
