@@ -38,11 +38,11 @@ pipeline {
                                 cd $APP_DIR
                                 echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-                                docker build -t $DOCKER_USER/devops-task:latest .
-                                docker push $DOCKER_USER/devops-task:latest
+                                sudo docker build -t $DOCKER_USER/devops-task:latest .
+                                sudo docker push $DOCKER_USER/devops-task:latest
 
-                                docker rm -f devops-task || true
-                                docker run -d --name devops-task -p 3000:4010 $DOCKER_USER/devops-task:latest
+                                sudo docker rm -f devops-task || true
+                                sudo docker run -d --name devops-task -p 3000:4010 $DOCKER_USER/devops-task:latest
                             '
                         """
                     }
