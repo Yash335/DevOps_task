@@ -18,7 +18,7 @@ pipeline {
 
         stage('Copy Code to EC2') {
             steps {
-                sshagent(['ssh_key']) {
+                sshagent(['ec2_ssh_key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no $EC2_HOST "mkdir -p $APP_DIR"
                         scp -o StrictHostKeyChecking=no -r * $EC2_HOST:$APP_DIR/
