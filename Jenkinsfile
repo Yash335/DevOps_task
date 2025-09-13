@@ -49,6 +49,6 @@ pipeline {
                 }
             }
         }
-    }   // <-- closes stages
-}       // <-- closes pipeline
+    }   
+}       
 
