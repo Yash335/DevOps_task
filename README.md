@@ -68,7 +68,7 @@ This guide explains how code changes in a GitHub repository are automatically de
   Ensure the Cloudflare Tunnel URL is reachable and correctly configured in GitHub webhook.
 
 
-## 🏗️ Architecture Diagram
+##  Architecture Diagram
 
     +------------------+
     |   Developer PC   |
