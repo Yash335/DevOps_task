@@ -18,7 +18,7 @@ pipeline {
 
         stage('Copy Code to EC2') {
             steps {
-                sshagent(['ec2_ssh_key']) {
+                sshagent(['ec2-ssh-key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no $EC2_HOST "mkdir -p $APP_DIR"
                         scp -o StrictHostKeyChecking=no -r * $EC2_HOST:$APP_DIR/
@@ -29,7 +29,7 @@ pipeline {
 
         stage('Build, Push & Deploy on EC2') {
             steps {
-                sshagent(['ec2_ssh_key']) {
+                sshagent(['ec2-ssh-key']) {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials',
                                                       usernameVariable: 'DOCKER_USER',
                                                       passwordVariable: 'DOCKER_PASS')]) {
