@@ -40,7 +40,7 @@ pipeline {
                                 docker build -t $DOCKER_USER/devops-task:latest . &&
                                 docker push $DOCKER_USER/devops-task:latest &&
                                 docker rm -f devops-task || true &&
-                                docker run -d --name devops-task -p 3000:3000 $DOCKER_USER/devops-task:latest
+                                docker run -d --name devops-task -p 3000:4010 $DOCKER_USER/devops-task:latest
                             '
                         """
                     }
