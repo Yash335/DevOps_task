@@ -29,7 +29,7 @@ pipeline {
 
         stage('Build, Push & Deploy on EC2') {
             steps {
-                sshagent(['ssh_key']) {
+                sshagent(['ec2_ssh_key']) {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials',
                                                       usernameVariable: 'DOCKER_USER',
                                                       passwordVariable: 'DOCKER_PASS')]) {
