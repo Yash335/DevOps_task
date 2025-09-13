@@ -9,6 +9,7 @@ This guide explains how code changes in a GitHub repository are automatically de
 - A GitHub repository containing:
   - Application source code
   - `Dockerfile`
+  - Jenkinsfile
 - Jenkins server running on **localhost:8080**, with:
   - Git plugin
   - SSH Agent plugin
