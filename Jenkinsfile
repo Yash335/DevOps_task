@@ -36,11 +36,18 @@ pipeline {
                         sh """
                             ssh -o StrictHostKeyChecking=no $EC2_HOST '
                                 cd $APP_DIR
-                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
+                                # Create a temporary docker config dir
+                                mkdir -p /tmp/.docker
+
+                                # Login using provided credentials
+                                echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin --config /tmp/.docker
+
+                                # Build and push image
                                 sudo docker build -t $DOCKER_USER/devops-task:latest .
-                                sudo docker push $DOCKER_USER/devops-task:latest
+                                sudo docker push $DOCKER_USER/devops-task:latest --config /tmp/.docker
 
+                                # Clean up old container & run new one
                                 sudo docker rm -f devops-task || true
                                 sudo docker run -d --name devops-task -p 3000:4010 $DOCKER_USER/devops-task:latest
                             '
@@ -49,6 +56,6 @@ pipeline {
                 }
             }
         }
-    }   
-}       
+    }
+}
 
