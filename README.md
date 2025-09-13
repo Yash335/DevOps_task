@@ -67,3 +67,43 @@ This guide explains how code changes in a GitHub repository are automatically de
 - **Webhook not triggering Jenkins?**  
   Ensure the Cloudflare Tunnel URL is reachable and correctly configured in GitHub webhook.
 
+
+## 🏗️ Architecture Diagram
+
+    +------------------+
+    |   Developer PC   |
+    |-----------------|
+    | Push Code to Git |
+    +--------+---------+
+             |
+             | Git Push (main branch)
+             v
+    +------------------+
+    |   GitHub Repo    |
+    +--------+---------+
+             |
+             | Webhook Trigger
+             v
+    +------------------+
+    |     Jenkins      |
+    |  (localhost:8080)|
+    |  Cloudflare URL  |
+    +--------+---------+
+             |
+             | SSH + Docker commands
+             v
+    +------------------+
+    |     EC2 Instance |
+    |-----------------|
+    | Docker Installed |
+    | /home/ubuntu/app |
+    +--------+---------+
+             |
+             | Exposed Port 3000
+             v
+    +------------------+
+    |     Browser      |
+    |  Access App via  |
+    | http://EC2:3000 |
+    +------------------+
+
