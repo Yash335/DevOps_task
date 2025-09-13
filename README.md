@@ -30,9 +30,9 @@ This guide explains how code changes in a GitHub repository are automatically de
 - Developer commits and pushes changes to the `main` branch:
 
 
- git add .
- git commit -m "New feature update"
- git push origin main
+ 1. git add .
+ 2. git commit -m "New feature update"
+ 3. git push origin main
 
 
 ### 2. Jenkins Job Triggered via Webhook
