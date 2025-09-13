@@ -28,26 +28,30 @@ pipeline {
         }
 
         stage('Build, Push & Deploy on EC2') {
-            steps {
-                sshagent(['ec2-ssh-key']) {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
-                                                      usernameVariable: 'DOCKER_USER',
-                                                      passwordVariable: 'DOCKER_PASS')]) {
-                        sh """
-                            ssh -o StrictHostKeyChecking=no $EC2_HOST '
-                                cd $APP_DIR &&
-                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin &&
-                                docker build -t $DOCKER_USER/devops-task:latest . &&
-                                docker push $DOCKER_USER/devops-task:latest &&
-                                docker rm -f devops-task || true &&
-                                docker run -d --name devops-task -p 3000:4010 $DOCKER_USER/devops-task:latest
-                            '
-                        """
-                    }
-                }
+    steps {
+        sshagent(['ec2-ssh-key']) {
+            withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
+                                              usernameVariable: 'DOCKER_USER',
+                                              passwordVariable: 'DOCKER_PASS')]) {
+                sh """
+                    ssh -o StrictHostKeyChecking=no $EC2_HOST '
+                        cd $APP_DIR
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                        docker build -t $DOCKER_USER/devops-task:latest .
+                        docker push $DOCKER_USER/devops-task:latest
+
+                        # Always remove old container if exists
+                        docker rm -f devops-task || true
+
+                        # Run new container
+                        docker run -d --name devops-task -p 3000:4010 $DOCKER_USER/devops-task:latest
+                    '
+                """
             }
         }
     }
+}
 
     post {
         success {
