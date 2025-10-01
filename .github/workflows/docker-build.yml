@@ -25,4 +25,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: mydockerhubusername/my-app:${{ github.ref_name }}
+          tags: yash335/devops-task:${{ github.ref_name }}
