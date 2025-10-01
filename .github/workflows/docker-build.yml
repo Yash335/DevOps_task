@@ -3,9 +3,7 @@ name: Build & Push Docker Image
 on:
   push:
     branches:
-      - 'origin/dev'
-      - 'origin/stage'
-      - 'origin/prod'
+      - '*'
 
 jobs:
   build:
