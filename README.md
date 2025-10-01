@@ -93,7 +93,7 @@ This guide explains how code changes in a GitHub repository are automatically de
              | SSH + Docker commands
              v
     +------------------+
-    |     EC2 Instance |
+    |   EC2 Instance  |
     |-----------------|
     | Docker Installed |
     | /home/ubuntu/app |
