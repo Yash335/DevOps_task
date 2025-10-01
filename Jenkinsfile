@@ -46,7 +46,7 @@ pipeline {
                                 sudo docker build -t $DOCKER_USER/devops-task:latest .
                                 sudo docker push $DOCKER_USER/devops-task:latest --config /tmp/.docker
 
-                                # Clean old container & run new one
+                                # d container & run new one
                                 sudo docker rm -f devops-task || true
                                 sudo docker run -d --name devops-task -p 3000:3000 $DOCKER_USER/devops-task:latest
                             '
