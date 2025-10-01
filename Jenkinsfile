@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     environment {
         DOCKERHUB_REPO = "yash335/devops-task"
         EC2_HOST = "ubuntu@18.136.229.137"
