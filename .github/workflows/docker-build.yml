@@ -43,7 +43,7 @@ jobs:
       # Update image in overlay (example: dev)
       - name: Update Image Tag in GitOps Repo
         run: |
-          cd gitops/app/myapp/overlays/dev
+          cd gitops/argo/app/myapp/overlays/dev
           sed -i "s|image: .*|image: docker.io/yash335/devops-task:${{ github.sha }}|" image-patch.yaml
 
       # Commit and push changes to GitOps repo
